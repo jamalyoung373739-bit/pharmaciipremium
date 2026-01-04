@@ -1,0 +1,64 @@
+-- [[ CONFIG ]] --
+local WHITELIST_URL = "https://raw.githubusercontent.com/jamalyoung373739-bit/whitelist.json/main/json"
+
+-- [[ UPDATED: Converted to RAW link so loadstring works ]] --
+local HUB_URL = "https://raw.githubusercontent.com/jamalyoung373739-bit/Pharmacii1f/main/Finale"
+
+local hwid = (gethwid and gethwid()) or (game:GetService("RbxAnalyticsService"):GetClientId())
+local HttpService = game:GetService("HttpService")
+
+print("PHARMACII: Starting Authentication...")
+
+local function Authenticate()
+    local success, response = pcall(function()
+        -- Adding a timestamp query to bypass caching
+        return game:HttpGet(WHITELIST_URL .. "?t=" .. os.time())
+    end)
+
+    if success then
+        -- Attempt to decode the JSON
+        local decodeSuccess, whitelist = pcall(function() return HttpService:JSONDecode(response) end)
+        
+        if not decodeSuccess then
+            warn("PHARMACII: Failed to decode whitelist JSON. Check your JSON format!")
+            print("Response was:", response)
+            return
+        end
+
+        local isWhitelisted = false
+
+        -- Check every ID in your GitHub list
+        for _, id in pairs(whitelist) do
+            -- Trimming whitespace just in case
+            if string.find(id, hwid) or id == hwid then
+                isWhitelisted = true
+                break
+            end
+        end
+
+        if isWhitelisted then
+            print("PHARMACII: ID Verified! Loading Hub...")
+            local hubSuccess, hubCode = pcall(function()
+                return game:HttpGet(HUB_URL)
+            end)
+            
+            if hubSuccess then
+                loadstring(hubCode)()
+            else
+                warn("PHARMACII: Failed to load Hub script. The link is broken or repo is private.")
+            end
+        else
+            warn("PHARMACII: Access Denied.")
+            print("Your HWID: " .. tostring(hwid))
+            print("Your ID was not found in the whitelist.")
+            if setclipboard then 
+                setclipboard(hwid) 
+                print("HWID copied to clipboard.")
+            end
+        end
+    else
+        warn("PHARMACII: Connection Error (Could not reach Whitelist).")
+    end
+end
+
+task.spawn(Authenticate)
