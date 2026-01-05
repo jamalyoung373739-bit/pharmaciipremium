@@ -1,86 +1,93 @@
--- [[ CONFIG ]] --
+-- [[ DEBUG CONFIG ]] --
 local WHITELIST_URL = "https://raw.githubusercontent.com/jamalyoung373739-bit/whitelist.json/main/json"
 local HUB_URL = "https://raw.githubusercontent.com/jamalyoung373739-bit/Pharmacii1f/main/Finale"
 
--- [[ 1. GET ROBLOX USERNAME ]] --
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Username = LocalPlayer.Name
+local StarterGui = game:GetService("StarterGui")
 
--- [[ 2. FORCE COPY & NOTIFY ]] --
-pcall(function() 
-    if setclipboard then setclipboard(Username) end
-    if toclipboard then toclipboard(Username) end
-end)
-
-print("------------------------------------------")
-print("PHARMACII HUB AUTHENTICATION")
-print("AUTHENTICATING USER: " .. Username)
-print("------------------------------------------")
-
-pcall(function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "PHARMACII",
-        Text = "Checking Whitelist...",
+-- Helper for Notifications
+local function ShowNotif(title, text)
+    StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text,
         Duration = 5,
-        Icon = "rbxassetid://6031154871" 
     })
-end)
+end
 
--- [[ 3. AUTHENTICATION LOGIC (RAW TEXT FIX) ]] --
+print("------------------------------------------")
+print("PHARMACII DEBUGGER STARTED")
+print("MY USERNAME: '" .. Username .. "'")
+print("TARGET URL: " .. WHITELIST_URL)
+print("------------------------------------------")
+
+ShowNotif("DEBUG", "Attempting to fetch whitelist...")
+
 local function Authenticate()
-    -- Fetch the raw text from the website
+    -- 1. Try to fetch the file
+    print("DEBUG: Sending HTTP Request...")
     local success, response = pcall(function()
-        return game:HttpGet(WHITELIST_URL .. "?t=" .. os.time())
+        return game:HttpGet(WHITELIST_URL .. "?t=" .. os.time(), true)
     end)
 
-    if success then
-        local isWhitelisted = false
-        
-        -- Loop through every line of text in the GitHub file
-        for line in response:gmatch("[^\r\n]+") do
-            -- 1. Remove any extra spaces or quotes (Sanitization)
-            local cleanLine = line:gsub('["%[%],]', '') -- Removes ["], useful if you accidentally left JSON symbols
-            
-            -- 2. Split at the "|" to get just the name
-            local namePart = string.split(cleanLine, "|")[1]
+    if not success then
+        warn("CRITICAL ERROR: HTTP Request Failed!")
+        warn("Error Message: " .. tostring(response))
+        ShowNotif("ERROR", "Check F9 Console (HTTP Fail)")
+        return
+    end
 
-            -- 3. Trim whitespace around the name
-            if namePart then
-                namePart = namePart:match("^%s*(.-)%s*$")
-                
-                -- 4. Check match
-                if namePart == Username then
-                    isWhitelisted = true
-                    break
-                end
+    print("DEBUG: HTTP Request Successful.")
+    print("DEBUG: File Content (First 100 chars):")
+    print(string.sub(response, 1, 100)) -- Show us what the file looks like
+    print("------------------------------------------")
+
+    local isWhitelisted = false
+    
+    -- 2. Scan the file
+    for line in response:gmatch("[^\r\n]+") do
+        -- Clean the line (remove JSON symbols if they exist)
+        local cleanLine = line:gsub('["%[%],]', '') 
+        
+        -- Split at "|"
+        local split = string.split(cleanLine, "|")
+        local nameFromList = split[1]
+
+        -- Trim spaces
+        if nameFromList then
+            nameFromList = nameFromList:match("^%s*(.-)%s*$")
+            
+            -- Print what we are comparing
+            print("CHECKING: '" .. nameFromList .. "' vs '" .. Username .. "'")
+
+            if nameFromList == Username then
+                isWhitelisted = true
+                print(">>> MATCH FOUND! <<<")
+                break
             end
         end
+    end
 
-        if isWhitelisted then
-            print("PHARMACII: ACCESS GRANTED. Loading Hub...")
-            local hubSuccess, hubCode = pcall(function() return game:HttpGet(HUB_URL) end)
-            
-            if hubSuccess then
-                loadstring(hubCode)()
-            else
-                warn("PHARMACII: Failed to load Hub script (404 or Network Error).")
-                game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "ERROR",
-                    Text = "Failed to load script",
-                    Duration = 5
-                })
-            end
-        else
-            warn("PHARMACII: ACCESS DENIED.")
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "ACCESS DENIED",
-                Text = "Username copied. Send to Amiri.",
-                Duration = 5
-            })
+    print("------------------------------------------")
+
+    if isWhitelisted then
+        ShowNotif("SUCCESS", "Access Granted! Loading...")
+        print("PHARMACII: Loading Hub Script...")
+        
+        local loadSuccess, err = pcall(function()
+            loadstring(game:HttpGet(HUB_URL))()
+        end)
+        
+        if not loadSuccess then
+            warn("SCRIPT ERROR: Could not load the Hub script.")
+            warn(err)
+            ShowNotif("ERROR", "Hub script failed to load (Check F9)")
         end
     else
-        warn("PHARMACII: Connection Error (Could not reach GitHub).")
+        warn("PHARMACII: User '" .. Username .. "' was NOT found in the list.")
+        ShowNotif("DENIED", "Username not in whitelist.")
+        setclipboard(Username)
     end
 end
 
