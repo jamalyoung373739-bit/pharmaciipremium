@@ -6,7 +6,6 @@ local HUB_URL = "https://raw.githubusercontent.com/jamalyoung373739-bit/Pharmaci
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Username = LocalPlayer.Name
-local HttpService = game:GetService("HttpService")
 
 -- [[ 2. FORCE COPY & NOTIFY ]] --
 pcall(function() 
@@ -28,32 +27,29 @@ pcall(function()
     })
 end)
 
--- [[ 3. AUTHENTICATION LOGIC ]] --
+-- [[ 3. AUTHENTICATION LOGIC (RAW TEXT FIX) ]] --
 local function Authenticate()
+    -- Fetch the raw text from the website
     local success, response = pcall(function()
         return game:HttpGet(WHITELIST_URL .. "?t=" .. os.time())
     end)
 
     if success then
-        local decodeSuccess, whitelist = pcall(function() return HttpService:JSONDecode(response) end)
-        
-        if not decodeSuccess then
-            warn("PHARMACII: JSON Error. Check your GitHub file format.")
-            return
-        end
-
         local isWhitelisted = false
-
-        -- [[ UPDATED CHECKER ]] --
-        for _, entry in pairs(whitelist) do
-            -- 1. Split the entry at the "|" symbol to separate Name from Note
-            local namePart = string.split(entry, "|")[1]
+        
+        -- Loop through every line of text in the GitHub file
+        for line in response:gmatch("[^\r\n]+") do
+            -- 1. Remove any extra spaces or quotes (Sanitization)
+            local cleanLine = line:gsub('["%[%],]', '') -- Removes ["], useful if you accidentally left JSON symbols
             
-            -- 2. Trim spaces (Turns "User " into "User")
+            -- 2. Split at the "|" to get just the name
+            local namePart = string.split(cleanLine, "|")[1]
+
+            -- 3. Trim whitespace around the name
             if namePart then
                 namePart = namePart:match("^%s*(.-)%s*$")
                 
-                -- 3. Check if it matches
+                -- 4. Check match
                 if namePart == Username then
                     isWhitelisted = true
                     break
@@ -68,7 +64,12 @@ local function Authenticate()
             if hubSuccess then
                 loadstring(hubCode)()
             else
-                warn("PHARMACII: Failed to fetch script.")
+                warn("PHARMACII: Failed to load Hub script (404 or Network Error).")
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "ERROR",
+                    Text = "Failed to load script",
+                    Duration = 5
+                })
             end
         else
             warn("PHARMACII: ACCESS DENIED.")
@@ -79,7 +80,7 @@ local function Authenticate()
             })
         end
     else
-        warn("PHARMACII: Connection Error.")
+        warn("PHARMACII: Connection Error (Could not reach GitHub).")
     end
 end
 
