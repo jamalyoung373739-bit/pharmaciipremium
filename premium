@@ -5,86 +5,73 @@ local HUB_URL = "https://raw.githubusercontent.com/jamalyoung373739-bit/Pharmaci
 -- [[ 1. GET ROBLOX USERNAME ]] --
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local Username = LocalPlayer.Name -- This gets the actual account name, not DisplayName
+local Username = LocalPlayer.Name
 local HttpService = game:GetService("HttpService")
 
 -- [[ 2. FORCE COPY & NOTIFY ]] --
--- Try to copy the Username immediately
 pcall(function() 
     if setclipboard then setclipboard(Username) end
     if toclipboard then toclipboard(Username) end
 end)
 
--- Force message to F9 Console
 print("------------------------------------------")
 print("PHARMACII HUB AUTHENTICATION")
 print("AUTHENTICATING USER: " .. Username)
-print("USERNAME HAS BEEN COPIED TO CLIPBOARD")
 print("------------------------------------------")
 
--- Windows/Screen Pop-up
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "PHARMACII USERNAME",
-        Text = "Copied: " .. Username,
-        Duration = 10,
+        Title = "PHARMACII",
+        Text = "Checking Whitelist...",
+        Duration = 5,
         Icon = "rbxassetid://6031154871" 
     })
 end)
 
--- Executor Console (if available)
-if rconsoleprint then
-    rconsoleprint("\nPHARMACII USER: " .. Username .. "\n")
-    rconsoleprint("Copy the name above and send it to amiri in ur ticket.\n")
-end
-
 -- [[ 3. AUTHENTICATION LOGIC ]] --
-print("PHARMACII: Verifying Username against Whitelist...")
-
 local function Authenticate()
     local success, response = pcall(function()
-        -- Adding timestamp to bypass caching
         return game:HttpGet(WHITELIST_URL .. "?t=" .. os.time())
     end)
 
     if success then
-        -- Decode the JSON list
         local decodeSuccess, whitelist = pcall(function() return HttpService:JSONDecode(response) end)
         
         if not decodeSuccess then
-            warn("PHARMACII: Failed to decode whitelist JSON. Check your JSON format!")
+            warn("PHARMACII: JSON Error. Check your GitHub file format.")
             return
         end
 
         local isWhitelisted = false
 
-        -- Check Username
-        for _, name in pairs(whitelist) do
-            -- Compare the names (Exact match)
-            if name == Username then
-                isWhitelisted = true
-                break
+        -- [[ UPDATED CHECKER ]] --
+        for _, entry in pairs(whitelist) do
+            -- 1. Split the entry at the "|" symbol to separate Name from Note
+            local namePart = string.split(entry, "|")[1]
+            
+            -- 2. Trim spaces (Turns "User " into "User")
+            if namePart then
+                namePart = namePart:match("^%s*(.-)%s*$")
+                
+                -- 3. Check if it matches
+                if namePart == Username then
+                    isWhitelisted = true
+                    break
+                end
             end
         end
 
         if isWhitelisted then
             print("PHARMACII: ACCESS GRANTED. Loading Hub...")
-            
-            -- Load the Script
-            local hubSuccess, hubCode = pcall(function()
-                return game:HttpGet(HUB_URL)
-            end)
+            local hubSuccess, hubCode = pcall(function() return game:HttpGet(HUB_URL) end)
             
             if hubSuccess then
                 loadstring(hubCode)()
             else
-                warn("PHARMACII: Whitelisted, but failed to fetch Hub script.")
+                warn("PHARMACII: Failed to fetch script.")
             end
         else
             warn("PHARMACII: ACCESS DENIED.")
-            print("Your Username ("..Username..") is not in the whitelist.")
-            
-            -- Notify user they are denied
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "ACCESS DENIED",
                 Text = "Username copied. Send to Amiri.",
@@ -92,7 +79,7 @@ local function Authenticate()
             })
         end
     else
-        warn("PHARMACII: Connection Error (Check Whitelist URL).")
+        warn("PHARMACII: Connection Error.")
     end
 end
 
