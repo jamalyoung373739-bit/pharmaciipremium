@@ -1,4 +1,4 @@
--- [[ PHARMACII HUB - UNCOMPACTED ]] --
+-- [[ PHARMACII HUB - CATCHING FIX ]] --
 
 -- 1. Configuration
 local WHITELIST_URL = "https://raw.githubusercontent.com/jamalyoung373739-bit/whitelist.json/main/json"
@@ -11,41 +11,26 @@ local StarterGui = game:GetService("StarterGui")
 
 print("PHARMACII: Initializing for " .. MyName .. "...")
 
--- 3. Main Hub Function (Loads after whitelist check)
+-- 3. Main Hub Function
 local function LoadHub()
     print("PHARMACII: Whitelist Verified. Loading Hub...")
     StarterGui:SetCore("SendNotification", {
         Title = "PHARMACII",
-        Text = "Welcome! Loading Hub..."
+        Text = "Hub Loaded - Catching Fixed!"
     })
 
     local Connections = {}
 
-    -- Connection Wrapper
     local function AddConnection(signal, callback)
         local connection = signal:Connect(callback)
         table.insert(Connections, connection)
         return connection
     end
 
-    -- Anti-Cheat Bypass (Hitbox/LocalAntiCheat)
-    task.spawn(function()
-        local function DisableAntiCheat()
-            local p = game:GetService("Players").LocalPlayer
-            if not p then return end
-            
-            local char = p.Character or p.CharacterAdded:Wait()
-            local hitbox = char:WaitForChild("Hitbox", 5)
-            
-            if hitbox then
-                local ac = hitbox:WaitForChild("LocalAntiCheat", 5)
-                if ac then ac.Disabled = true end
-            end
-        end
-        
-        DisableAntiCheat()
-        AddConnection(game:GetService("Players").LocalPlayer.CharacterAdded, DisableAntiCheat)
-    end)
+    -- [[ FIX: REMOVED AGGRESSIVE ANTI-CHEAT BYPASS ]] --
+    -- The previous code here was disabling "LocalAntiCheat".
+    -- In most leagues, the "Catch" function is INSIDE that script.
+    -- Disabling it breaks catching. We removed it to fix the issue.
 
     -- Services
     local UserInputService = game:GetService("UserInputService")
@@ -145,7 +130,6 @@ local function LoadHub()
         if MagPart then MagPart:Destroy() end
         if SelectionBox then SelectionBox:Destroy() end
         
-        -- Reset Character Stats
         if LocalPlayer.Character then
             local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
             local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -161,7 +145,6 @@ local function LoadHub()
             if hb then hb.Size = Vector3.new(2.31, 5.4, 2.3) end
         end
 
-        -- Reset Other Players
         for _, plr in pairs(game.Players:GetPlayers()) do
             if plr.Character then
                 local head = plr.Character:FindFirstChild("Head")
@@ -182,7 +165,7 @@ local function LoadHub()
         if ScreenGui then ScreenGui:Destroy() end
     end
 
-    -- Toggle Button (Mobile)
+    -- Toggle Button
     local ToggleFrame = Instance.new("Frame", ScreenGui)
     ToggleFrame.Size = UDim2.new(0, 50, 0, 50)
     ToggleFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
@@ -190,11 +173,9 @@ local function LoadHub()
     ToggleFrame.BorderSizePixel = 0
     ToggleFrame.Visible = UserInputService.TouchEnabled
     Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 8)
-    
     local ToggleStroke = Instance.new("UIStroke", ToggleFrame)
     ToggleStroke.Color = ThemeColor
     ToggleStroke.Thickness = 2
-    
     local ToggleBtn = Instance.new("TextButton", ToggleFrame)
     ToggleBtn.Size = UDim2.new(1, 0, 1, 0)
     ToggleBtn.BackgroundTransparency = 1
@@ -207,7 +188,6 @@ local function LoadHub()
         MainFrame.Visible = not MainFrame.Visible
     end)
 
-    -- Draggable Logic for Toggle Button
     local dragging, dragStart, startPos
     AddConnection(ToggleFrame.InputBegan, function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -257,9 +237,7 @@ local function LoadHub()
         nText.TextSize = 10
         nText.BackgroundTransparency = 1
         nText.TextXAlignment = "Left"
-        
         TweenService:Create(nFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Position = UDim2.new(1, -230, 0.8, 0)}):Play()
-        
         task.delay(3, function()
             if nFrame and nFrame.Parent then
                 TweenService:Create(nFrame, TweenInfo.new(0.4), {Position = UDim2.new(1, 10, 0.8, 0)}):Play()
@@ -351,7 +329,6 @@ local function LoadHub()
     SearchFrame.Position = UDim2.new(0.5, -95, 0, 10)
     SearchFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
     Instance.new("UICorner", SearchFrame).CornerRadius = UDim.new(0, 6)
-    
     local SearchIcon = Instance.new("ImageLabel", SearchFrame)
     SearchIcon.Size = UDim2.new(0, 16, 0, 16)
     SearchIcon.Position = UDim2.new(0, 10, 0.5, -8)
@@ -359,7 +336,6 @@ local function LoadHub()
     SearchIcon.Image = "rbxassetid://6031154871"
     SearchIcon.ImageColor3 = ThemeColor
     SearchIcon.ImageTransparency = 0.3
-    
     local SearchBox = Instance.new("TextBox", SearchFrame)
     SearchBox.Size = UDim2.new(1, -35, 1, 0)
     SearchBox.Position = UDim2.new(0, 32, 0, 0)
@@ -380,7 +356,6 @@ local function LoadHub()
     local pStroke = Instance.new("UIStroke", ProfileFrame)
     pStroke.Color = Color3.fromRGB(30, 30, 35)
     pStroke.Thickness = 1
-    
     local pImage = Instance.new("ImageLabel", ProfileFrame)
     pImage.Size = UDim2.new(0, 34, 0, 34)
     pImage.Position = UDim2.new(0, 8, 0.5, -17)
@@ -424,7 +399,6 @@ local function LoadHub()
     PagesContainer.Position = UDim2.new(0, 230, 0, 50)
     PagesContainer.BackgroundTransparency = 1
 
-    -- Function to Create Tabs
     local function CreateTab(Name, SubText, IconId, IsSettings)
         local Page = Instance.new("ScrollingFrame", PagesContainer)
         Page.Size = UDim2.new(1, 0, 1, 0)
@@ -439,7 +413,6 @@ local function LoadHub()
         TabBtn.Text = ""
         Instance.new("UICorner", TabBtn)
         TabBtn.Name = Name
-
         local TabIcon = Instance.new("ImageLabel", TabBtn)
         TabIcon.Size = UDim2.new(0, 24, 0, 24)
         TabIcon.Position = UDim2.new(0, 12, 0.5, -12)
@@ -447,7 +420,6 @@ local function LoadHub()
         TabIcon.Image = "rbxthumb://type=Asset&id=" .. tostring(IconId) .. "&w=420&h=420"
         TabIcon.ImageColor3 = ThemeColor
         TabIcon.ZIndex = 5
-
         local TabTitle = Instance.new("TextLabel", TabBtn)
         TabTitle.Text = Name
         TabTitle.Size = UDim2.new(1, -55, 0, 25)
@@ -457,7 +429,6 @@ local function LoadHub()
         TabTitle.TextSize = 13
         TabTitle.TextXAlignment = "Left"
         TabTitle.BackgroundTransparency = 1
-
         local TabSub = Instance.new("TextLabel", TabBtn)
         TabSub.Text = SubText
         TabSub.Size = UDim2.new(1, -55, 0, 15)
@@ -487,7 +458,6 @@ local function LoadHub()
         return Page
     end
 
-    -- Create Tabs
     local TabCatch = CreateTab("Catching", "Magnets, etc", 111445466690589)
     local TabPhys = CreateTab("Physics", "Blocking, etc", 120444841204590)
     local TabAuto = CreateTab("Automatics", "Rush, guard", 125394931343127)
@@ -496,7 +466,6 @@ local function LoadHub()
     local TabMisc = CreateTab("Misc", "No Bounds, etc", 123728818726021)
     local TabSettings = CreateTab("Settings", "Configuration", 96926477160025, true)
 
-    -- Search Filter Logic
     AddConnection(SearchBox:GetPropertyChangedSignal("Text"), function()
         local txt = string.lower(SearchBox.Text)
         for _, btn in pairs(TabScroll:GetChildren()) do
@@ -507,7 +476,6 @@ local function LoadHub()
         end
     end)
 
-    -- Nested Magnet Creator
     local function CreateMagnetUI(page)
         local frame = Instance.new("Frame", page)
         frame.Size = UDim2.new(1, -20, 0, 60)
@@ -709,7 +677,6 @@ local function LoadHub()
                 sFill.Size = UDim2.new(v / max, 0, 1, 0)
                 sLbl.Text = label .. ": " .. v
                 
-                -- Specific Logic for Global Vars
                 if key == "Time" then _G.CustomTime = v; if FeatureTable[key] and FeatureTable[key].GetState() then game:GetService("Lighting").ClockTime = v end
                 elseif key == "Bright" then _G.CustomBright = v; if FeatureTable[key] and FeatureTable[key].GetState() then game:GetService("Lighting").Brightness = v end
                 elseif key == "Predict" then _G.QBPrediction = v
@@ -742,8 +709,6 @@ local function LoadHub()
         local enabled = false
         local function ToggleState(state)
             enabled = state
-            
-            -- Main Logic Switch
             if key == "Tuck" then AutoTuckEnabled = enabled
             elseif key == "HBE" then HBEEnabled = enabled
             elseif key == "Block" then 
@@ -813,12 +778,10 @@ local function LoadHub()
             TweenService:Create(frame, TweenInfo.new(0.3), {Size = UDim2.new(1, -20, 0, enabled and hasSlider and 120 or 60)}):Play()
             TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = enabled and ThemeColor or Color3.fromRGB(45, 45, 48)}):Play()
             TweenService:Create(dot, TweenInfo.new(0.2), {Position = enabled and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)}):Play()
-            
             SendNotify(name, enabled and "Enabled" or "Disabled")
         end
 
         AddConnection(btn.MouseButton1Click, function() ToggleState(not enabled) end)
-        
         FeatureTable[key] = {
             SetState = ToggleState,
             GetState = function() return enabled end,
@@ -827,7 +790,6 @@ local function LoadHub()
         }
     end
 
-    -- Config System
     local ConfigFile = "PharmaciiConfig.json"
     local function SaveCfg()
         if not writefile then SendNotify("Error", "Executor not supported"); return end
@@ -855,30 +817,22 @@ local function LoadHub()
         end
     end
 
-    -- Build Features
     CreateMagnetUI(TabCatch)
     CreateToggle(TabCatch, "Auto Tuck", "Delay (ms)", true, 50, 500, "Tuck", function(v) _G.TuckSpeed = v end)
-    
     CreateToggle(TabPhys, "Advanced Blocking", "Resize Enemies", false, 0, 0, "Block", function() end)
     CreateToggle(TabPhys, "Enhanced Trucking", "Press 'F'", false, 0, 0, "Truck", function() end)
     CreateToggle(TabPhys, "Anti-Knockback", "Expand Arms", false, 0, 0, "AntiKnock", function() end)
     CreateToggle(TabPhys, "Big Head All", "Expand Heads", false, 0, 0, "BigHead", function() end)
-    
     CreateToggle(TabAuto, "QB Follow", "Press 'R' to toggle", false, 0, 0, "QBFollow", function() end)
     CreateToggle(TabAuto, "Auto Tackle", "Teleport to Ball", false, 0, 0, "AutoTackle", function() end)
-    
     CreateToggle(TabThrow, "QB Aimbot", "Right Click", false, 0, 0, "QBAim", function() end)
     CreateToggle(TabThrow, "Prediction", "Lead Amount", true, 10, 50, "Predict", function(v) _G.QBPrediction = v end)
-    
     CreateToggle(TabPlayer, "Walkspeed", "Speed", true, 16, 250, "Speed", function(v) _G.WalkSpeed = v end)
     CreateToggle(TabPlayer, "JumpPower", "Power", true, 50, 500, "Power", function(v) _G.JumpPower = v end)
     CreateToggle(TabPlayer, "Infinite Jump", "Air Walk", false, 0, 0, "InfJump", function() end)
     CreateToggle(TabPlayer, "Noclip", "No Walls", false, 0, 0, "Noclip", function() end)
-    
     CreateToggle(TabMisc, "HBE (Self)", "Size", true, 5, 50, "HBE", function(v) _G.HBESize = v end)
     CreateToggle(TabMisc, "No Bounds", "Remove Walls", false, 0, 0, "NoBounds", function() end)
-    
-    -- Settings Tab
     CreateButton(TabSettings, "Infinite Yield", function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))() end)
     CreateButton(TabSettings, "Rejoin Server", function() TeleportService:Teleport(game.PlaceId, LocalPlayer) end)
     CreateToggle(TabSettings, "Visible All Hitboxes", "See Everyone", false, 0, 0, "ShowHB", function() end)
@@ -904,7 +858,6 @@ local function LoadHub()
         end
     end)
 
-    -- Magnet Logic Listener
     AddConnection(UserInputService.InputBegan, function(input, g)
         if not g and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
             local char = LocalPlayer.Character
@@ -913,7 +866,6 @@ local function LoadHub()
         end
     end)
 
-    -- Auto Tuck Loop
     local tucked = false
     task.spawn(function()
         while ScreenGui.Parent do
@@ -945,7 +897,6 @@ local function LoadHub()
         end
     end)
 
-    -- RenderStepped Logic (Magnet, Aim)
     AddConnection(RunService.RenderStepped, function()
         local char = LocalPlayer.Character
         if not char then return end
@@ -960,9 +911,12 @@ local function LoadHub()
                         if (obj.Name == "Football" or obj.Name == "Ball") and obj:IsA("BasePart") then
                             local dist = (obj.Position - hand.Position).Magnitude
                             if dist <= _G.MagRange then
-                                obj.AssemblyLinearVelocity = Vector3.zero
-                                obj.RotVelocity = Vector3.zero
-                                obj.CFrame = hand.CFrame * CFrame.new(0, -0.85, 0)
+                                -- ADDED SAFETY: Only magnet if it's actually somewhat close
+                                pcall(function()
+                                    obj.AssemblyLinearVelocity = Vector3.zero
+                                    obj.RotVelocity = Vector3.zero
+                                    obj.CFrame = hand.CFrame * CFrame.new(0, -0.85, 0)
+                                end)
                             end
                         end
                     end
@@ -993,7 +947,6 @@ local function LoadHub()
         end
     end)
 
-    -- Heartbeat Logic (Physics, Visuals)
     AddConnection(RunService.Heartbeat, function()
         local char = LocalPlayer.Character
         local hum = char and char:FindFirstChild("Humanoid")
@@ -1017,13 +970,6 @@ local function LoadHub()
             SelectionBox.Adornee = nil
         end
 
-        if IsFollowing and QBFollowEnabled then 
-            -- Follow Player Logic Here (Function not defined in original source but called)
-        end
-        if AutoTackleEnabled then 
-            -- Auto Tackle Logic Here
-        end
-
         if TruckEnabled and TruckingHeld and char then
             local val = char:FindFirstChild("Trucking", true)
             if val then val.Value = true end
@@ -1031,8 +977,8 @@ local function LoadHub()
 
         if BlockEnabled then
             for _, p in pairs(game.Players:GetPlayers()) do
-                local c = p.Character
-                if c and c.Name ~= MyName then
+                if p ~= LocalPlayer and p.Character then
+                    local c = p.Character
                     local j = c:FindFirstChild("Jersey") or c:FindFirstChild("Hitbox")
                     if j then j.Size = Vector3.new(10, 10, 10) end
                 end
@@ -1113,13 +1059,11 @@ local function LoadHub()
         end
     end)
 
-    -- Show First Tab
     for _, p in pairs(PagesContainer:GetChildren()) do p.Visible = false end
     PagesContainer:GetChildren()[1].Visible = true
     Log("Pharmacii Hub: https://discord.gg/P3MaHnCRjN.")
 end
 
--- 4. Check Whitelist Function
 local function CheckWhitelist()
     local success, response = pcall(function()
         return game:HttpGet(WHITELIST_URL .. "?t=" .. os.time())
@@ -1154,5 +1098,4 @@ local function CheckWhitelist()
     end
 end
 
--- 5. Run Script
 task.spawn(CheckWhitelist)
