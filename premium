@@ -4,4 +4,4 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 -- This kicks the player immediately when they execute the old script
-LocalPlayer:Kick("\n\n⚠️ PHARMACII HUB ⚠️\n\nYou are using an OLD LOADER.\nThis script version has been disabled for security.\n\nPlease get the NEW KEY SYSTEM LOADER from our Discord.\n\ndiscord.gg/BuFCPQV6")
+LocalPlayer:Kick("\n\n⚠️ PHARMACII HUB ⚠️\n\nYou are using the OLD LOADER.\nThis script version has been disabled for security.\n\nPlease get the loader from our Discord.\n\ndiscord.gg/BuFCPQV6")
